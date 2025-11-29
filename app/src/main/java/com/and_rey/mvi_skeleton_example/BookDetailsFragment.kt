@@ -6,9 +6,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.and_rey.mvi_skeleton_example.databinding.FragmentBookDetailsBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 
 /**
@@ -31,6 +34,7 @@ class BookDetailsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentBookDetailsBinding.inflate(layoutInflater)
+        //fetch data(book details) from db or remote server
         viewModel.userIntent.trySend(BookDetailsViewModel.Wish.LoadBookDetails(args.bookId))
 
         with(binding) {
@@ -43,15 +47,26 @@ class BookDetailsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         with(binding) {
             //view is created! setup your click-listeners, RV's adapters etc here
+            //todo add click listener
+            button.onClickListener{
+                viewModel.userIntent.trySend(
+                    BookDetailsViewModel.Wish.UpdateName(
+                        newName = "new name"
+                    )
+                )
+            }
         }
 
         //here is the magic -
         //you are listening for StateFlow variable 'state' from vm
         //state reflects current state(thanks, Cap) of model
-        viewModel.state
-            .onEach {
-                setState(it)
-            }
+        viewModel.state.onEach {
+            setState(it)
+        }
             .launchIn(viewLifecycleOwner.lifecycleScope)
+    }
+
+    private fun setState(state: BookDetailsViewModel.State) {
+        //set up UI according to last changes in view-model
     }
 }

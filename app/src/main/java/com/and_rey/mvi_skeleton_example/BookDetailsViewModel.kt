@@ -28,11 +28,11 @@ class BookDetailsViewModel @Inject constructor(
     private val deleteBookUseCase: DeleteBookUseCase,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(State.IDLE)
+    private val _state = MutableStateFlow(State())
     val state: StateFlow<State>
         get() = _state
 
-    val userIntent = MutableSharedFlow<Wish>(replay = 1)
+    val userIntent = Channel<Wish>(Channel.UNLIMITED)
 
     init {
         handleIntent()
@@ -40,24 +40,40 @@ class BookDetailsViewModel @Inject constructor(
 
     private fun handleIntent() {
         userIntent
+            .consumeAsFlow()
             .onEach { wish ->
                 when (wish) {
                     is Wish.LoadBookDetails -> {
+                        _state.update { it.copy(isLoading = true) }
+                        //below may be either db or network request via usecase
+                        val book = fetchBookDetailsUseCase.fetchBookByIdUseCase(wish.bookId)
+
                         _state.update {
                             it.copy(
-//                                        uiDeptItems = buildSortedDepartments(),
-//                                        uiProductItems = buildSortedProducts()
+                                isLoading = false,
+                                bookId = book.id,
+                                bookName = book.name
                             )
                         }
                     }
 
 
                     is Wish.UpdateName -> {
+                        _state.update { it.copy(isLoading = true) }
+                        updateBookUseCase.updateName(wish.newName)
 
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                bookName = wish.newName
+                            )
+                        }
                     }
 
                     Wish.DeleteBook -> {
-
+                        deleteBookUseCase.deleteById(id = state.value.bookId)
+                        //from here you can send command to leave a fragment,
+                        // show toast or whatever you want
                     }
                 }
             }
@@ -72,14 +88,15 @@ class BookDetailsViewModel @Inject constructor(
     }
 
     data class State(
-        val bookId: Int,
-        val bookName: String,
+        val bookId: Int? = null,
+        val bookName: String? = null,
+        val isLoading: Boolean = true
     ) {
-        companion object {
-            val IDLE = State(
-                bookId = 0,
-                bookName = "",
-            )
-        }
+//        companion object {
+//            val IDLE = State(
+//                bookId = null,
+//                bookName = null,
+//            )
+//        }
     }
 }
