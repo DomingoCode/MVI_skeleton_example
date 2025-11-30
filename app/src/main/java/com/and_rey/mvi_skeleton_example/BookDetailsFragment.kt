@@ -38,7 +38,7 @@ class BookDetailsFragment : Fragment() {
         viewModel.userIntent.trySend(BookDetailsViewModel.Wish.LoadBookDetails(args.bookId))
 
         with(binding) {
-            //before view created: setup your initial animation and for example text with data from args
+            //before view created: setup your initial animation and, for example, text with data from args
         }
         return binding.root
     }
@@ -48,7 +48,7 @@ class BookDetailsFragment : Fragment() {
         with(binding) {
             //view is created! setup your click-listeners, RV's adapters etc here
             //todo add click listener
-            button.onClickListener{
+            button.onClickListener {
                 viewModel.userIntent.trySend(
                     BookDetailsViewModel.Wish.UpdateName(
                         newName = "new name"
@@ -62,8 +62,7 @@ class BookDetailsFragment : Fragment() {
         //state reflects current state(thanks, Cap) of model
         viewModel.state.onEach {
             setState(it)
-        }
-            .launchIn(viewLifecycleOwner.lifecycleScope)
+        }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     private fun setState(state: BookDetailsViewModel.State) {
